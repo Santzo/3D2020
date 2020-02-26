@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
     Vector3 movement;
     bool jump, inAir;
     Transform nose;
-    float moveSpeed = 8f;
+    float moveSpeed = 280f;
     float rotationSpeed = 135f;
     Rigidbody rb;
 
@@ -19,23 +19,22 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (movement.z != 0)
-        { 
-            Vector3 move = transform.right * movement.z * moveSpeed * Time.fixedDeltaTime;
-            rb.MovePosition(rb.position + move);
+        if (jump && !inAir)
+        {
+            jump = false;
+            Vector3 jumpForce = new Vector3(0f, 225f, 0f);
+            rb.AddForce(jumpForce, ForceMode.Impulse);
         }
+        
+            Vector3 move = transform.right * movement.z * moveSpeed * Time.fixedDeltaTime;
+            rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
+
         if (movement.x != 0)
         {
             Vector3 a = rb.rotation.eulerAngles;
             float rotSpeed = movement.x * rotationSpeed * Time.fixedDeltaTime;
             Quaternion rot = Quaternion.Euler(a.x, a.y + rotSpeed, a.z);
             rb.MoveRotation(rot);
-        }
-        if (jump && !inAir)
-        {
-            jump = false;
-            Vector3 jumpForce = new Vector3(0f, 225f, 0f);
-            rb.AddForce(jumpForce, ForceMode.Impulse);
         }
     }
     private void Update()
