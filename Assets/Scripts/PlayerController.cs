@@ -10,6 +10,8 @@ public class PlayerController : MonoBehaviour
     Camera cam;
     float moveSpeed = 280f;
     float rotationSpeed = 135f;
+    float jumpForce = 25f;
+    int jumpFrames = 0, maxJumpFrames = 35;
     Rigidbody rb;
     bool controller;
 
@@ -22,20 +24,15 @@ public class PlayerController : MonoBehaviour
     {
         cam = Camera.main;
         if (Input.GetJoystickNames().Length > 0) controller = true;
-        //Debug.Log(Input.GetJoystickNames().Length);
-        //foreach (var cont in Input.GetJoystickNames())
-        //{
-        //    Debug.Log(cont);
-        //}
     }
 
     private void FixedUpdate()
     {
-        if (jump && !inAir)
+        if (jump)
         {
             jump = false;
             inAir = true;
-            Vector3 jumpForce = new Vector3(0f, 225f, 0f);
+            Vector3 jumpForce = new Vector3(0f, 30f, 0f);
             rb.AddForce(jumpForce, ForceMode.Impulse);
         }
 
@@ -70,16 +67,19 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         movement = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));
-        if (jump || inAir) return;
+        if (!Input.GetButton("BottomButton")) jumpFrames = 0;
+        if (inAir && jumpFrames == 0) return;
+        if (jumpFrames > maxJumpFrames) return;
         if (!controller) // Hyppykoodi, jos pelaaja pelaa näppäimistöllä
         {
             if (Input.GetKeyDown(KeyCode.Space))
                 jump = true;
         }
-        else
+        else // Hyppykoodi, jos pelaaja pelaa ohjaimella
         {
-            if (Input.GetButtonDown("BottomButton"))
+            if (Input.GetButton("BottomButton"))
             {
+                jumpFrames++;
                 jump = true;
             }
         }
@@ -94,6 +94,8 @@ public class PlayerController : MonoBehaviour
     {
         bool onTop = transform.position.y >= collision.transform.position.y;
         inAir = !onTop;
+        Vector3 position = collision.GetContact(0).point - transform.position;
+        Debug.Log(position);
     }
 }
 
