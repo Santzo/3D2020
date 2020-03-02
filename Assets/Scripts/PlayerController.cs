@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    Vector3 movement;
+    Vector3 movement, collisionPosition;
     bool jump, inAir;
     Transform nose;
     Camera cam;
@@ -62,6 +62,7 @@ public class PlayerController : MonoBehaviour
             float _moveSpeed = Mathf.Min(movement.magnitude, 1f) * moveSpeed * Time.fixedDeltaTime;
             Vector3 move = transform.right * _moveSpeed;
             rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
+            //rb.AddForce(new Vector3(move.x, 0f, move.z), ForceMode.Impulse);
         }
     }
     private void Update()
@@ -94,8 +95,7 @@ public class PlayerController : MonoBehaviour
     {
         bool onTop = transform.position.y >= collision.transform.position.y;
         inAir = !onTop;
-        Vector3 position = collision.GetContact(0).point - transform.position;
-        Debug.Log(position);
     }
+
 }
 
