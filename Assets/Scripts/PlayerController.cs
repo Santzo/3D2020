@@ -1,17 +1,20 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
     Vector3 movement, collisionPosition;
     bool jump, inAir;
     Transform nose;
+    TextMeshProUGUI debug;
     Camera cam;
     float moveSpeed = 280f;
     float rotationSpeed = 135f;
-    float jumpForce = 25f;
-    int jumpFrames = 0, maxJumpFrames = 35;
+    float jumpForce = 15f;
+    int jumpFrames = 0, maxJumpFrames = 18;
     Rigidbody rb;
     bool controller;
 
@@ -23,17 +26,22 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         cam = Camera.main;
-        if (Input.GetJoystickNames().Length > 0) controller = true;
+        controller = JoystickHandler.DetectControllerType();
+        InputSystem.onDeviceChange += (a, b) => JoystickHandler.DetectControllerType();
+        debug = GameObject.Find("Debug").GetComponent<TextMeshProUGUI>();
     }
 
     private void FixedUpdate()
     {
         if (jump)
         {
-            jump = false;
             inAir = true;
-            Vector3 jumpForce = new Vector3(0f, 30f, 0f);
-            rb.AddForce(jumpForce, ForceMode.Impulse);
+            jumpFrames++;
+            if (jumpFrames <= maxJumpFrames)
+            {
+                Vector3 _jumpForce = new Vector3(0f, jumpForce, 0f);
+                rb.AddForce(_jumpForce, ForceMode.Impulse);
+            }
         }
 
         if (!controller) // Liikkuminen, jos pelaaja pelaa näppäimistöllä
@@ -52,25 +60,32 @@ public class PlayerController : MonoBehaviour
 
         else // Liikkuminen, jos pelaaja pelaa ohjaimella
         {
-            if (movement.x != 0 || movement.z != 0)
+            if (movement.x != 0 || movement.y != 0)
             {
                 float rotY = ReturnRotation(movement);
                 Quaternion rot = Quaternion.Euler(0f, rotY + cam.transform.eulerAngles.y, 0f);
-                Quaternion destRot = Quaternion.Lerp(transform.rotation, rot , 0.25f);
+                Quaternion destRot = Quaternion.Lerp(transform.rotation, rot, 0.25f);
                 rb.MoveRotation(destRot);
             }
             float _moveSpeed = Mathf.Min(movement.magnitude, 1f) * moveSpeed * Time.fixedDeltaTime;
             Vector3 move = transform.right * _moveSpeed;
             rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
-            //rb.AddForce(new Vector3(move.x, 0f, move.z), ForceMode.Impulse);
         }
     }
     private void Update()
     {
-        movement = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));
-        if (!Input.GetButton("BottomButton")) jumpFrames = 0;
-        if (inAir && jumpFrames == 0) return;
-        if (jumpFrames > maxJumpFrames) return;
+        debug.text = jumpFrames.ToString();
+        movement = JoystickHandler.Movement();
+        if (JoystickHandler.Jump() == 0)
+        {
+            jumpFrames = 0;
+            jump = false;
+        }
+        if (inAir && jumpFrames == 0 || jumpFrames > maxJumpFrames)
+        {
+            jump = false;
+            return;
+        }
         if (!controller) // Hyppykoodi, jos pelaaja pelaa näppäimistöllä
         {
             if (Input.GetKeyDown(KeyCode.Space))
@@ -78,17 +93,18 @@ public class PlayerController : MonoBehaviour
         }
         else // Hyppykoodi, jos pelaaja pelaa ohjaimella
         {
-            if (Input.GetButton("BottomButton"))
+            if (JoystickHandler.Jump() > 0)
             {
-                jumpFrames++;
                 jump = true;
             }
         }
+
     }
-    float ReturnRotation(Vector3 rot)
+    float ReturnRotation(Vector2 rot)
     {
-        float angle = Mathf.Atan2(-rot.z, rot.x) * Mathf.Rad2Deg;
+        float angle = Mathf.Atan2(-rot.y, rot.x) * Mathf.Rad2Deg;
         return angle;
+
     }
 
     private void OnCollisionEnter(Collision collision)

@@ -49,7 +49,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap:
-        m_Texture: {fileID: 2800000, guid: f34833ec2931632489a0d82169e97fc9, type: 3}
+        m_Texture: {fileID: 2800000, guid: d48d3016cd15ca24196cd454ca5c067e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -73,7 +73,7 @@ Material:
     - _GlossinessSource: 0
     - _GlossyReflections: 0
     - _Metallic: 0
-    - _NormalMapStrength: 2.37
+    - _NormalMapStrength: 0.3
     - _OcclusionStrength: 1
     - _QueueOffset: 0
     - _ReceiveShadows: 0
@@ -89,7 +89,9 @@ Material:
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
+    - Color_3EEF09EB: {r: 0.7169812, g: 0.7169812, b: 0.7169812, a: 0}
     - Vector2_7160BF34: {r: 25, g: 25, b: 0, a: 0}
+    - Vector2_7F98FC10: {r: 50, g: 50, b: 0, a: 0}
     - Vector2_E44FC129: {r: 25, g: 25, b: 0, a: 0}
     - _BaseColor: {r: 0.6132076, g: 0.6132076, b: 0.6132076, a: 1}
     - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
