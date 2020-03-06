@@ -1,48 +1,94 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.UI;
 
 public class JoystickHandler
 {
-    public static ButtonControl jump, attack, pause;
+    private static ButtonControl jump, attack, pause;
+    private static ButtonControl[] allButtons;
+    private static Sprite[] PS4Buttons = Resources.LoadAll<Sprite>("PS4"), XBoxButtons = Resources.LoadAll<Sprite>("XBox");
+    private static Image debugImage = GameObject.Find("DebugImage").GetComponent<Image>();
     public static Gamepad controller;
     public static bool dualshock;
 
     public static bool DetectControllerType()
     {
-        Debug.Log("KRAAAAAAAAA" + Gamepad.all.Count);
         controller = InputSystem.GetDevice<Gamepad>();
-        if (controller.device.name.ToLower().Contains("dualshock"))
+        if (controller != null)
         {
-            Debug.Log("Playstation controller");
-            dualshock = true;
+            if (controller.device.name.ToLower().Contains("dualshock"))
+            {
+                Debug.Log("Playstation controller");
+                dualshock = true;
+            }
+            else
+            {
+                Debug.Log("Not a playstation controller");
+                dualshock = false;
+            }
+            SetControls();
+            allButtons = (from control in controller.allControls
+                         where control is ButtonControl && !control.name.EndsWith("Button")
+                         select control as ButtonControl).ToArray();
         }
-        if (controller != null) SetControls();
         return controller != null;
     }
     public static void SetControls()
     {
-        jump = controller.crossButton;
-        attack = controller.circleButton;
+        jump = controller.buttonSouth;
+        attack = controller.buttonWest;
         pause = controller.startButton;
+    
     }
-    public static Vector2 Movement()
+    public static Vector2 Movement
     {
-        return Gamepad.current.leftStick.ReadValue();
+        get{
+            return controller.leftStick.ReadValue();
+        }
     }
-    public static float Jump()
+    public static float Jump
     {
-        return jump.ReadValue();
+        get
+        {
+            return jump.ReadValue();
+        }
     }
-    public static float Attack()
+    public static bool Attack
     {
-        return attack.ReadValue();
+        get
+        {
+            return attack.wasPressedThisFrame;
+        }
     }
-    public static float Start()
+    public static bool Start
     {
-        return pause.ReadValue();
+        get
+        {
+            return pause.wasPressedThisFrame;
+        }
+    }
+
+    public static void AnyButton()
+    {
+        var pressedButton = allButtons.FirstOrDefault(a => a.wasPressedThisFrame && !a.synthetic);
+      
+        if (pressedButton != null)
+        {
+            Debug.Log(pressedButton.name);
+            debugImage.sprite = ButtonSprite(pressedButton.name);
+        }
+    }
+
+    private static Sprite ButtonSprite(string name)
+    {
+        return dualshock ? PS4Buttons.FirstOrDefault(a => a.name == name) : XBoxButtons.FirstOrDefault(a => a.name == name);
     }
 
 

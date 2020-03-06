@@ -13,8 +13,8 @@ public class PlayerController : MonoBehaviour
     Camera cam;
     float moveSpeed = 280f;
     float rotationSpeed = 135f;
-    float jumpForce = 15f;
-    int jumpFrames = 0, maxJumpFrames = 18;
+    float jumpForce = 17.5f;
+    int jumpFrames = 0, maxJumpFrames = 15;
     Rigidbody rb;
     bool controller;
 
@@ -27,7 +27,7 @@ public class PlayerController : MonoBehaviour
     {
         cam = Camera.main;
         controller = JoystickHandler.DetectControllerType();
-        InputSystem.onDeviceChange += (a, b) => JoystickHandler.DetectControllerType();
+        InputSystem.onDeviceChange += (a, b) => controller = JoystickHandler.DetectControllerType();
         debug = GameObject.Find("Debug").GetComponent<TextMeshProUGUI>();
     }
 
@@ -75,8 +75,13 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         debug.text = jumpFrames.ToString();
-        movement = JoystickHandler.Movement();
-        if (JoystickHandler.Jump() == 0)
+        movement = controller ? JoystickHandler.Movement : new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")) ;
+
+
+        if (!controller) return;
+        JoystickHandler.AnyButton();
+        if (JoystickHandler.Attack) Debug.Log("Attack");
+        if (JoystickHandler.Jump == 0)
         {
             jumpFrames = 0;
             jump = false;
@@ -93,7 +98,7 @@ public class PlayerController : MonoBehaviour
         }
         else // Hyppykoodi, jos pelaaja pelaa ohjaimella
         {
-            if (JoystickHandler.Jump() > 0)
+            if (JoystickHandler.Jump > 0)
             {
                 jump = true;
             }
@@ -104,7 +109,6 @@ public class PlayerController : MonoBehaviour
     {
         float angle = Mathf.Atan2(-rot.y, rot.x) * Mathf.Rad2Deg;
         return angle;
-
     }
 
     private void OnCollisionEnter(Collision collision)
