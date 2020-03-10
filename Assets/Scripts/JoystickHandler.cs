@@ -81,7 +81,6 @@ public class JoystickHandler
       
         if (pressedButton != null)
         {
-            Debug.Log(pressedButton.name);
             debugImage.sprite = ButtonSprite(pressedButton.name);
         }
     }

@@ -35,6 +35,7 @@ public class PlayerController : MonoBehaviour
     {
         if (jump)
         {
+            if (!inAir) Audio.PlaySound("Jump", 0.5f, 0.3f);
             inAir = true;
             jumpFrames++;
             if (jumpFrames <= maxJumpFrames)
