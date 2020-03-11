@@ -12,7 +12,7 @@ public class PlayerController : MonoBehaviour
     TextMeshProUGUI debug;
     Camera cam;
     float moveSpeed = 280f;
-    float rotationSpeed = 135f;
+    float rotationSpeed = 0.25f, keyboardRotationSpeed = 0.45f;
     float jumpForce = 17.5f;
     int jumpFrames = 0, maxJumpFrames = 15;
     Rigidbody rb;
@@ -45,42 +45,39 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (!controller) // Liikkuminen, jos pelaaja pelaa näppäimistöllä
-        {
-            Vector3 move = transform.right * movement.z * moveSpeed * Time.fixedDeltaTime;
-            rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
+        //if (!controller) // Liikkuminen, jos pelaaja pelaa näppäimistöllä
+        //{
+        //    Vector3 move = transform.right * movement.y * moveSpeed * Time.fixedDeltaTime;
+        //    rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
 
-            if (movement.x != 0)
-            {
-                Vector3 a = rb.rotation.eulerAngles;
-                float rotSpeed = movement.x * rotationSpeed * Time.fixedDeltaTime;
-                Quaternion rot = Quaternion.Euler(a.x, a.y + rotSpeed, a.z);
-                rb.MoveRotation(rot);
-            }
-        }
+        //    if (movement.x != 0)
+        //    {
+        //        Vector3 a = rb.rotation.eulerAngles;
+        //        float rotSpeed = movement.x * rotationSpeed * Time.fixedDeltaTime;
+        //        Quaternion rot = Quaternion.Euler(a.x, a.y + rotSpeed, a.z);
+        //        rb.MoveRotation(rot);
+        //    }
+        //}
 
-        else // Liikkuminen, jos pelaaja pelaa ohjaimella
-        {
+        //else // Liikkuminen, jos pelaaja pelaa ohjaimella
+        //{
             if (movement.x != 0 || movement.y != 0)
             {
                 float rotY = ReturnRotation(movement);
                 Quaternion rot = Quaternion.Euler(0f, rotY + cam.transform.eulerAngles.y, 0f);
-                Quaternion destRot = Quaternion.Lerp(transform.rotation, rot, 0.25f);
+                Quaternion destRot = Quaternion.Lerp(transform.rotation, rot, controller ? rotationSpeed : keyboardRotationSpeed);
                 rb.MoveRotation(destRot);
             }
             float _moveSpeed = Mathf.Min(movement.magnitude, 1f) * moveSpeed * Time.fixedDeltaTime;
             Vector3 move = transform.right * _moveSpeed;
             rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
-        }
+        //}
     }
     private void Update()
     {
         debug.text = jumpFrames.ToString();
-        movement = controller ? JoystickHandler.Movement : new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")) ;
-
-
-        if (!controller) return;
-        JoystickHandler.AnyButton();
+        movement = controller ? JoystickHandler.Movement : JoystickHandler.KeyboardMovement;
+        if (controller) JoystickHandler.AnyButton();
         if (JoystickHandler.Attack) Debug.Log("Attack");
         if (JoystickHandler.Jump == 0)
         {
