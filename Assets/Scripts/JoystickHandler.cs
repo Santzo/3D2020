@@ -14,7 +14,7 @@ public class JoystickHandler
     private static ButtonControl jump, attack, pause;
     private static ButtonControl[] allButtons;
     private static Sprite[] PS4Buttons = Resources.LoadAll<Sprite>("PS4"), XBoxButtons = Resources.LoadAll<Sprite>("XBox");
-    private static Image debugImage = GameObject.Find("DebugImage").GetComponent<Image>();
+    private static Image debugImage;
     private static KeyControl[] left, right, up, down;
     private static KeyControl keyJump, keyAttack, keyPause;
     public static Gamepad controller;
@@ -22,6 +22,7 @@ public class JoystickHandler
 
     public static bool DetectControllerType()
     {
+        //debugImage = GameObject.Find("DebugImage").GetComponent<Image>();
         controller = InputSystem.GetDevice<Gamepad>();
         if (controller != null)
         {
@@ -69,6 +70,20 @@ public class JoystickHandler
         attack = controller.buttonWest;
         pause = controller.startButton;
     
+    }
+    
+    public static int MenuMovement
+    {
+        get
+        {
+            if (controller == null)
+            {
+                int _up = up[0].wasPressedThisFrame ? -1 : up[1].wasPressedThisFrame ? -1 : 0;
+                int _down = down[0].wasPressedThisFrame ? 1 : down[1].wasPressedThisFrame ? 1 : 0;
+                return _down + _up; 
+            }
+            return 0;
+        }
     }
     public static Vector2 KeyboardMovement
     {

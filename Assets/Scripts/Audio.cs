@@ -229,7 +229,13 @@ public class Audio : MonoBehaviour
         PlayerPrefs.SetFloat("MusicVolume", MusicVolume);
         PlayerPrefs.SetFloat("SoundVolume", SoundVolume);
     }
+    [RuntimeInitializeOnLoadMethod]
+    static void Initialize()
+    {
+        Audio.instance.name = "AudioManager";
+    }
 }
+   
 public static class AudioExtensions
 {
     public static void PlaySound(this AudioSource original, AudioClip clip, float volume = 1f, float pitch = 1f)
