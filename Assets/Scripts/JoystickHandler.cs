@@ -11,18 +11,18 @@ using UnityEngine.UI;
 
 public class JoystickHandler
 {
-    private static ButtonControl jump, attack, pause;
+    private static ButtonControl jump, attack, pause, cancel;
     private static ButtonControl[] allButtons;
     private static Sprite[] PS4Buttons = Resources.LoadAll<Sprite>("PS4"), XBoxButtons = Resources.LoadAll<Sprite>("XBox");
     private static Image debugImage;
     private static KeyControl[] left, right, up, down;
-    private static KeyControl keyJump, keyAttack, keyPause;
+    private static KeyControl keyJump, keyAttack, keyPause, keyCancel;
     public static Gamepad controller;
     public static bool dualshock;
 
     public static bool DetectControllerType()
     {
-        //debugImage = GameObject.Find("DebugImage").GetComponent<Image>();
+        debugImage = GameObject.Find("DebugImage")?.GetComponent<Image>();
         controller = InputSystem.GetDevice<Gamepad>();
         if (controller != null)
         {
@@ -62,6 +62,7 @@ public class JoystickHandler
         keyJump = Keyboard.current.spaceKey;
         keyAttack = Keyboard.current.leftShiftKey;
         keyPause = Keyboard.current.escapeKey;
+        keyCancel = Keyboard.current.escapeKey;
     }
 
     private static void SetControls()
@@ -69,7 +70,7 @@ public class JoystickHandler
         jump = controller.buttonSouth;
         attack = controller.buttonWest;
         pause = controller.startButton;
-    
+        cancel = controller.buttonEast;
     }
     
     public static int MenuMovement
@@ -82,7 +83,12 @@ public class JoystickHandler
                 int _down = down[0].wasPressedThisFrame ? 1 : down[1].wasPressedThisFrame ? 1 : 0;
                 return _down + _up; 
             }
-            return 0;
+            else
+            {
+                int _up = controller.dpad.up.wasPressedThisFrame ? -1 : controller.leftStick.up.wasPressedThisFrame ? -1 : 0;
+                int _down = controller.dpad.down.wasPressedThisFrame ? 1 : controller.leftStick.down.wasPressedThisFrame ? 1 : 0;
+                return _down + _up;
+            }
         }
     }
     public static Vector2 KeyboardMovement
@@ -115,6 +121,20 @@ public class JoystickHandler
         get
         {
             return controller != null ? attack.wasPressedThisFrame : keyAttack.wasPressedThisFrame;
+        }
+    }
+    public static bool Interact
+    {
+        get
+        {
+            return controller != null ? jump.wasPressedThisFrame : keyJump.wasPressedThisFrame;
+        }
+    }
+    public static bool Cancel
+    {
+        get
+        {
+            return controller != null ? cancel.wasPressedThisFrame : keyCancel.wasPressedThisFrame;
         }
     }
     public static bool Start
