@@ -12,7 +12,6 @@ using UnityEngine.UI;
 
 public class HighScoreManager : MonoBehaviour
 {
-    const string api = "AIzaSyC5tGPW19CMVQvAlp88UlfbyRklOJyO3oo";
     Entry entry = new Entry() { name = "Testi435", score = 6130 };
     private bool _scoresLoaded;
     private static HighScoreManager _instance;
@@ -72,6 +71,8 @@ public class HighScoreManager : MonoBehaviour
     private IEnumerator GetAuth()
     {
         var userData = "{'returnSecureToken': 'true'}";
+        string api = ""; 
+        api = Resources.Load<TextAsset>("info")?.text;
         var www = UnityWebRequest.Post("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + api, userData);
         www.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(userData));
         yield return www.SendWebRequest();
