@@ -155,7 +155,7 @@ public class JoystickHandler
         }
     }
 
-    private static Sprite ButtonSprite(string name)
+    public static Sprite ButtonSprite(string name)
     {
         return dualshock ? PS4Buttons.FirstOrDefault(a => a.name == name) : XBoxButtons.FirstOrDefault(a => a.name == name);
     }

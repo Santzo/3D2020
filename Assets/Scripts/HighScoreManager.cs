@@ -16,6 +16,7 @@ public class HighScoreManager : MonoBehaviour
     private bool _scoresLoaded;
     private static HighScoreManager _instance;
 
+    public float lastRefresh = 0f;
     public Action<bool> OnScoresLoaded = delegate { };
     public List<Entry> currentHighscores;
     public bool ScoresLoaded
@@ -46,11 +47,16 @@ public class HighScoreManager : MonoBehaviour
 
     public static void GetHighScores()
     {
-        instance.StartCoroutine(instance.GetScores());
-    }
-    private void Loaded(bool loaded)
-    {
-        Debug.Log(loaded);
+        float timeSince = Time.time - instance.lastRefresh;
+        if (instance.currentHighscores == null || timeSince > 30f)
+        {
+            instance.lastRefresh = Time.time;
+            instance.StartCoroutine(instance.GetScores());
+        }
+        else
+        {
+            instance.ScoresLoaded = true;
+        }
     }
 
     private IEnumerator PostScore(string newScore)
@@ -95,12 +101,7 @@ public class HighScoreManager : MonoBehaviour
         var www = UnityWebRequest.Get($"https://testi-f17c1.firebaseio.com/.json");
         www.SetRequestHeader("Content-Type", "application/json");
         var request = www.SendWebRequest();
-        while (!request.isDone)
-        {
-            Debug.Log(request.progress + ", " + www.downloadProgress + ", " + www.downloadedBytes);
-            yield return null;
-        }
-        
+        yield return request;
         if (www.isNetworkError || www.isHttpError)
         {
             Debug.Log(www.error);
@@ -112,10 +113,7 @@ public class HighScoreManager : MonoBehaviour
             string result = www.downloadHandler.text;
             Dictionary<string, Entry> entryDict = JsonConvert.DeserializeObject<Dictionary<string, Entry>>(result);
             currentHighscores = entryDict.Select(x => x.Value).OrderByDescending(x => x.score).ToList();
-            foreach (var entry in currentHighscores)
-            {
-                Debug.Log($"{entry.name} {entry.score}");
-            }
+          
             ScoresLoaded = true;
             yield return true;
         }
