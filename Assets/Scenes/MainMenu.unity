@@ -395,6 +395,8 @@ MonoBehaviour:
     type: 3}
   scoreEntry: {fileID: 8906403361236648045, guid: 9abd1dd77b9f9684eb1625b702071608,
     type: 3}
+  leftRight: {fileID: 7630608938494149369, guid: de313222f28bf9d499a8536ef7dc5950,
+    type: 3}
 --- !u!1 &665980662
 GameObject:
   m_ObjectHideFlags: 0

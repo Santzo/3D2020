@@ -10,7 +10,8 @@ using UnityEngine.UI;
 public class MainMenuHandler : MonoBehaviour
 {
     MenuState _menuState;
-    public GameObject menuItem, scoreEntry;
+    public GameObject menuItem, scoreEntry, leftRight;
+    private GameObject leftRightMenu;
     internal GameObject highScores, loading, content;
     internal Image[] helpBarImages;
 
@@ -20,12 +21,15 @@ public class MainMenuHandler : MonoBehaviour
     private string[] settings = new string[] { "Graphics", "Audio", "Controls" };
     private MenuItemType[] settingsTypes = new MenuItemType[] { MenuItemType.normal, MenuItemType.normal, MenuItemType.normal };
 
+    private string[] graphics = new string[] { "Resolution", "Lighting" };
+    private MenuItemType[] graphicsTypes = new MenuItemType[] { MenuItemType.leftright, MenuItemType.leftright };
+
     private string[] currentMenu;
     private MenuItemType[] currentMenuTypes;
 
     private MainMenuItem[] currentMenuItems;
     Vector2Int menuPosition = new Vector2Int(0, 200);
-    int spacing = 100, menuEnd, currentSelected, highScoreSpacing = 60;
+    int spacing = 110, menuEnd, currentSelected, highScoreSpacing = 60;
     MenuState menuState
     {
         get
@@ -41,7 +45,6 @@ public class MainMenuHandler : MonoBehaviour
 
     private void Awake()
     {
-        menuState = MenuState.main;
         highScores = transform.Find("HighScores").gameObject;
         loading = highScores.transform.Find("Loading").gameObject;
         content = highScores.transform.Find("Table").Find("Content").gameObject;
@@ -49,6 +52,10 @@ public class MainMenuHandler : MonoBehaviour
         highScores.SetActive(false);
         JoystickHandler.DetectControllerType();
         GetHelpBarButtonImages();
+        leftRightMenu = Instantiate(leftRight);
+        leftRightMenu.transform.SetParent(transform);
+        leftRightMenu.SetActive(false);
+        menuState = MenuState.main;
     }
 
     private void GetHelpBarButtonImages()
@@ -59,6 +66,8 @@ public class MainMenuHandler : MonoBehaviour
     }
     private void Start()
     {
+        FullScreenMode mode = (FullScreenMode)Enum.Parse(typeof(FullScreenMode), Settings.fullScreenMode);
+        Settings.SetResolution(Settings.screenWidth, Settings.screenHeight, mode);
         HighScoreManager.instance.OnScoresLoaded += ScoresLoaded;
     }
 
@@ -85,7 +94,7 @@ public class MainMenuHandler : MonoBehaviour
     private void Update()
     {
         if (JoystickHandler.MenuMovement != 0) MoveSelector(JoystickHandler.MenuMovement);
-        if (JoystickHandler.Interact)
+        if (JoystickHandler.Interact && currentMenuTypes[currentSelected] == MenuItemType.normal)
         {
             var sel = currentMenu[currentSelected];
             menuState = (MenuState)Enum.Parse(typeof(MenuState), ConvertToState(sel), true);
@@ -94,6 +103,11 @@ public class MainMenuHandler : MonoBehaviour
         {
             switch (menuState)
             {
+                case MenuState.graphics:
+                case MenuState.audio:
+                case MenuState.controls:
+                    menuState = MenuState.settings;
+                    break;
                 case MenuState.settings:
                     menuState = MenuState.main;
                     break;
@@ -127,8 +141,16 @@ public class MainMenuHandler : MonoBehaviour
             case MenuState.newgame:
                 SceneManager.LoadScene("Game", LoadSceneMode.Single);
                 break;
-            case MenuState.main:
-            case MenuState.settings:
+            case MenuState.highscores:
+                currentMenuItems = null;
+                highScores.SetActive(true);
+                loading.SetActive(true);
+                HighScoreManager.GetHighScores();
+                break;
+            case MenuState.quitgame:
+                Application.Quit();
+                break;
+            default:
                 currentMenu = (string[])GetType().GetField(menuState.ToString(), BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
                 currentMenuTypes = (MenuItemType[])GetType().GetField(menuState.ToString() + "Types", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
 
@@ -146,12 +168,7 @@ public class MainMenuHandler : MonoBehaviour
                 currentSelected = 0;
                 SetSelected();
                 break;
-            case MenuState.highscores:
-                currentMenuItems = null;
-                highScores.SetActive(true);
-                loading.SetActive(true);
-                HighScoreManager.GetHighScores();
-                break;
+
         }
     }
     private void SetSelected()
@@ -159,6 +176,15 @@ public class MainMenuHandler : MonoBehaviour
         for (int i = 0; i < currentMenu.Length; i++)
         {
             currentMenuItems[i].anim.SetBool(currentMenuItems[i].selected, i == currentSelected);
+        }
+        if (currentMenuTypes[currentSelected] == MenuItemType.normal)
+        {
+            leftRightMenu.SetActive(false);
+        }
+        else if (currentMenuTypes[currentSelected] == MenuItemType.leftright)
+        {
+            leftRightMenu.SetActive(true);
+            leftRightMenu.transform.localPosition = new Vector2(menuPosition.x, menuPosition.y - currentSelected * spacing - (spacing * 0.5f));
         }
     }
     private string ConvertToState(string obj)
@@ -177,7 +203,11 @@ enum MenuState
     main,
     highscores,
     settings,
-    newgame
+    newgame,
+    quitgame,
+    graphics,
+    audio,
+    controls
 }
 enum MenuItemType
 {

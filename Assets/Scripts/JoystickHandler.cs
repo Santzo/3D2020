@@ -127,7 +127,7 @@ public class JoystickHandler
     {
         get
         {
-            return controller != null ? jump.wasPressedThisFrame : keyJump.wasPressedThisFrame;
+            return controller != null ? jump.wasPressedThisFrame : Keyboard.current.enterKey.wasPressedThisFrame;
         }
     }
     public static bool Cancel
