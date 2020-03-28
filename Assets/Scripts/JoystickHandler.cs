@@ -73,7 +73,7 @@ public class JoystickHandler
         cancel = controller.buttonEast;
     }
     
-    public static int MenuMovement
+    public static int MenuMovementVertical
     {
         get
         {
@@ -88,6 +88,24 @@ public class JoystickHandler
                 int _up = controller.dpad.up.wasPressedThisFrame ? -1 : controller.leftStick.up.wasPressedThisFrame ? -1 : 0;
                 int _down = controller.dpad.down.wasPressedThisFrame ? 1 : controller.leftStick.down.wasPressedThisFrame ? 1 : 0;
                 return _down + _up;
+            }
+        }
+    }
+    public static int MenuMovementHorizontal
+    {
+        get
+        {
+            if (controller == null)
+            {
+                int _left = left[0].wasPressedThisFrame ? -1 : left[1].wasPressedThisFrame ? -1 : 0;
+                int _right = right[0].wasPressedThisFrame ? 1 : right[1].wasPressedThisFrame ? 1 : 0;
+                return _left + _right;
+            }
+            else
+            {
+                int _left = controller.dpad.left.wasPressedThisFrame ? -1 : controller.leftStick.left.wasPressedThisFrame ? -1 : 0;
+                int _right = controller.dpad.right.wasPressedThisFrame ? 1 : controller.leftStick.right.wasPressedThisFrame ? 1 : 0;
+                return _left + _right;
             }
         }
     }

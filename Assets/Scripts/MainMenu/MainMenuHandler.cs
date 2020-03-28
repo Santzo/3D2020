@@ -12,8 +12,10 @@ public class MainMenuHandler : MonoBehaviour
     MenuState _menuState;
     public GameObject menuItem, scoreEntry, leftRight;
     private GameObject leftRightMenu;
+    private TextMeshProUGUI leftRightText;
     internal GameObject highScores, loading, content;
     internal Image[] helpBarImages;
+    internal TextMeshProUGUI[] helpBarTexts;
 
     private string[] main = new string[] { "New Game", "High Scores", "Settings", "Quit Game" };
     private MenuItemType[] mainTypes = new MenuItemType[] { MenuItemType.normal, MenuItemType.normal, MenuItemType.normal, MenuItemType.normal };
@@ -21,10 +23,11 @@ public class MainMenuHandler : MonoBehaviour
     private string[] settings = new string[] { "Graphics", "Audio", "Controls" };
     private MenuItemType[] settingsTypes = new MenuItemType[] { MenuItemType.normal, MenuItemType.normal, MenuItemType.normal };
 
-    private string[] graphics = new string[] { "Resolution", "Lighting" };
-    private MenuItemType[] graphicsTypes = new MenuItemType[] { MenuItemType.leftright, MenuItemType.leftright };
+    private string[] graphics = new string[] { "Resolution", "Screen Mode", "Lighting" };
+    private MenuItemType[] graphicsTypes = new MenuItemType[] { MenuItemType.leftright, MenuItemType.leftright, MenuItemType.leftright };
 
-    private string[] currentMenu;
+    private string[] currentMenu, currentLeftRight;
+    private int selectedLeftRight;
     private MenuItemType[] currentMenuTypes;
 
     private MainMenuItem[] currentMenuItems;
@@ -39,7 +42,7 @@ public class MainMenuHandler : MonoBehaviour
         set
         {
             _menuState = value;
-            BuildMenu();
+            ChangeMenu();
         }
     }
 
@@ -49,12 +52,14 @@ public class MainMenuHandler : MonoBehaviour
         loading = highScores.transform.Find("Loading").gameObject;
         content = highScores.transform.Find("Table").Find("Content").gameObject;
         helpBarImages = transform.Find("HelpBar").GetComponentsInChildren<Image>();
+        helpBarTexts = transform.Find("HelpBar").GetComponentsInChildren<TextMeshProUGUI>();
         highScores.SetActive(false);
         JoystickHandler.DetectControllerType();
         GetHelpBarButtonImages();
         leftRightMenu = Instantiate(leftRight);
         leftRightMenu.transform.SetParent(transform);
         leftRightMenu.SetActive(false);
+        leftRightText = leftRightMenu.GetComponentInChildren<TextMeshProUGUI>();
         menuState = MenuState.main;
     }
 
@@ -66,8 +71,8 @@ public class MainMenuHandler : MonoBehaviour
     }
     private void Start()
     {
-        FullScreenMode mode = (FullScreenMode)Enum.Parse(typeof(FullScreenMode), Settings.fullScreenMode);
-        Settings.SetResolution(Settings.screenWidth, Settings.screenHeight, mode);
+        var res = Settings.ResolutionToVector;
+        Settings.SetResolution(res.x, res.y, FullScreenMode.ExclusiveFullScreen);
         HighScoreManager.instance.OnScoresLoaded += ScoresLoaded;
     }
 
@@ -93,7 +98,11 @@ public class MainMenuHandler : MonoBehaviour
 
     private void Update()
     {
-        if (JoystickHandler.MenuMovement != 0) MoveSelector(JoystickHandler.MenuMovement);
+        if (JoystickHandler.MenuMovementVertical != 0) MoveSelector(JoystickHandler.MenuMovementVertical);
+        if (JoystickHandler.MenuMovementHorizontal != 0 && currentMenuTypes[currentSelected] == MenuItemType.leftright)
+        {
+            SetLeftRight(JoystickHandler.MenuMovementHorizontal);
+        }
         if (JoystickHandler.Interact && currentMenuTypes[currentSelected] == MenuItemType.normal)
         {
             var sel = currentMenu[currentSelected];
@@ -119,6 +128,26 @@ public class MainMenuHandler : MonoBehaviour
             }
         }
     }
+
+    private void SetLeftRight(int move)
+    {
+       
+        if (move < 0)
+        {
+            selectedLeftRight--;
+            if (selectedLeftRight < 0) selectedLeftRight = currentLeftRight.Length - 1;
+        }
+        else if (move > 0)
+        {
+            selectedLeftRight++;
+            if (selectedLeftRight > currentLeftRight.Length - 1) selectedLeftRight = 0;
+        }
+        leftRightText.text = currentLeftRight[selectedLeftRight];
+        var item = ConvertToState(currentMenu[currentSelected]);
+        var text = typeof(Settings).GetField($"{item}Save");
+        text.SetValue(null, leftRightText.text);
+    }
+
     private void MoveSelector(int menuMovement)
     {
         currentSelected += menuMovement;
@@ -127,7 +156,7 @@ public class MainMenuHandler : MonoBehaviour
         SetSelected();
     }
 
-    private void BuildMenu()
+    private void ChangeMenu()
     {
         if (currentMenuItems?.Length > 0)
         {
@@ -150,28 +179,40 @@ public class MainMenuHandler : MonoBehaviour
             case MenuState.quitgame:
                 Application.Quit();
                 break;
-            default:
-                currentMenu = (string[])GetType().GetField(menuState.ToString(), BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
-                currentMenuTypes = (MenuItemType[])GetType().GetField(menuState.ToString() + "Types", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
-
-                menuEnd = currentMenu.Length - 1;
-                currentMenuItems = new MainMenuItem[currentMenu.Length];
-                for (int i = 0; i < currentMenu.Length; i++)
-                {
-                    var obj = Instantiate(menuItem);
-                    obj.transform.SetParent(transform);
-                    obj.transform.localPosition = new Vector2(menuPosition.x, menuPosition.y - i * spacing);
-                    MainMenuItem item = obj.GetComponent<MainMenuItem>();
-                    item.text.text = currentMenu[i];
-                    currentMenuItems[i] = item;
-                }
-                currentSelected = 0;
-                SetSelected();
+            case MenuState.main:
+            case MenuState.settings:
+                helpBarTexts[1].text = "Select";
+                helpBarTexts[2].text = "Back";
+                BuildMenu();
                 break;
-
+            default:
+                helpBarTexts[1].text = "Save";
+                helpBarTexts[2].text = "Cancel";
+                BuildMenu();
+                break;
         }
     }
-    private void SetSelected()
+    private void BuildMenu()
+    {
+        currentMenu = (string[])GetType().GetField(menuState.ToString(), BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
+        currentMenuTypes = (MenuItemType[])GetType().GetField(menuState.ToString() + "Types", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
+
+        menuEnd = currentMenu.Length - 1;
+        currentMenuItems = new MainMenuItem[currentMenu.Length];
+        for (int i = 0; i < currentMenu.Length; i++)
+        {
+            var obj = Instantiate(menuItem);
+            obj.transform.SetParent(transform);
+            obj.transform.localPosition = new Vector2(menuPosition.x, menuPosition.y - i * spacing);
+            MainMenuItem item = obj.GetComponent<MainMenuItem>();
+            item.text.text = currentMenu[i];
+            currentMenuItems[i] = item;
+        }
+        currentSelected = 0;
+        SetSelected(true);
+    }
+
+    private void SetSelected(bool init = false)
     {
         for (int i = 0; i < currentMenu.Length; i++)
         {
@@ -183,8 +224,14 @@ public class MainMenuHandler : MonoBehaviour
         }
         else if (currentMenuTypes[currentSelected] == MenuItemType.leftright)
         {
+            if (init) Settings.RestoreValues();
             leftRightMenu.SetActive(true);
-            leftRightMenu.transform.localPosition = new Vector2(menuPosition.x, menuPosition.y - currentSelected * spacing - (spacing * 0.5f));
+            leftRightMenu.transform.localPosition = new Vector2(menuPosition.x, menuPosition.y - currentSelected * spacing - (spacing * 0.4f));
+            var item = ConvertToState(currentMenuItems[currentSelected].text.text);
+            var text = typeof(Settings).GetField($"{item}Save")?.GetValue(null) as string;
+            leftRightText.text = text ?? "nothing";
+            currentLeftRight = typeof(Settings).GetField($"{item}s")?.GetValue(null) as string[];
+            selectedLeftRight = Array.IndexOf(currentLeftRight, text);
         }
     }
     private string ConvertToState(string obj)
