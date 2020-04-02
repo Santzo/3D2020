@@ -201,19 +201,17 @@ public class Audio : MonoBehaviour
         }
     }
 
-
-    public void VolumeReset(string _name, float volume)
+    public void VolumeReset(string _name, int obj)
     {
-
-        volume = Mathf.Clamp(volume, 0f, 100f);
+        var volume = obj * 10;
         float _volume = -20f + (volume * 0.2f);
         if (volume < 50f) _volume += -49f + (volume);
         if (volume == 0f) _volume = -80f;
-        if (_name == "Master")
+        if (_name == "mastervolume")
             master.SetFloat("masterVol", _volume);
-        if (_name == "Sound")
+        if (_name == "sfxvolume")
             master.SetFloat("soundVol", _volume);
-        if (_name == "Music")
+        if (_name == "musicvolume")
             master.SetFloat("musicVol", _volume);
     }
     public float ReturnVol(string volume)

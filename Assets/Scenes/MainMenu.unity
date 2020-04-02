@@ -397,6 +397,7 @@ MonoBehaviour:
     type: 3}
   leftRight: {fileID: 7630608938494149369, guid: de313222f28bf9d499a8536ef7dc5950,
     type: 3}
+  slider: {fileID: 8377308119424398620, guid: 27595fe8fae97bf46a5dc6f199986f62, type: 3}
 --- !u!1 &665980662
 GameObject:
   m_ObjectHideFlags: 0
