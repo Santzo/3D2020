@@ -6,7 +6,8 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     private static GameManager _instance;
-    public static GameManager instance {
+    public static GameManager instance
+    {
         get
         {
             if (_instance == null)
@@ -17,7 +18,7 @@ public class GameManager : MonoBehaviour
             return _instance;
         }
     }
- 
+
     [HideInInspector]
     public float time = 0f;
     [HideInInspector]
@@ -25,6 +26,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-GB");
         timer = GameObject.Find("Timer").GetComponent<TextMeshProUGUI>();
     }
     private void Update()
@@ -34,9 +36,6 @@ public class GameManager : MonoBehaviour
     private void UpdateTime()
     {
         time += Time.deltaTime;
-        float minutes = Mathf.Floor(time / 60);
-        float seconds = Mathf.Floor(time - minutes * 60);
-        float milliseconds = Mathf.Floor((time % 1) * 10f);
-        timer.text = string.Format("{0:0}:{1:00}.{2:0}", minutes, seconds, milliseconds);
+        timer.text = $"{(int)time / 60:0}:{time % 60:00.0}";
     }
 }

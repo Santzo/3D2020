@@ -15,6 +15,9 @@ public class MainMenuHandler : MonoBehaviour
     private TextMeshProUGUI leftRightText;
     internal GameObject highScores, loading, content;
     internal Image[] helpBarImages;
+    private Transform pointers;
+    private float pointerSpeed = 10f;
+    private Coroutine movePointers;
     internal TextMeshProUGUI[] helpBarTexts;
 
     private string[] main = new string[] { "New Game", "High Scores", "Settings", "Quit Game" };
@@ -34,8 +37,8 @@ public class MainMenuHandler : MonoBehaviour
     private MenuItemType[] currentMenuTypes;
 
     private MainMenuItem[] currentMenuItems;
-    Vector2Int menuPosition = new Vector2Int(0, 200);
-    int spacing = 110, menuEnd, currentSelected, highScoreSpacing = 60;
+    Vector2Int menuPosition = new Vector2Int(0, 270);
+    int defaultSpacing = 180, spacing = 180, menuEnd, currentSelected, highScoreSpacing = 60;
     MenuState menuState
     {
         get
@@ -56,6 +59,7 @@ public class MainMenuHandler : MonoBehaviour
         content = highScores.transform.Find("Table").Find("Content").gameObject;
         helpBarImages = transform.Find("HelpBar").GetComponentsInChildren<Image>();
         helpBarTexts = transform.Find("HelpBar").GetComponentsInChildren<TextMeshProUGUI>();
+        pointers = transform.Find("Pointers");
         highScores.SetActive(false);
         JoystickHandler.DetectControllerType();
         GetHelpBarButtonImages();
@@ -168,7 +172,7 @@ public class MainMenuHandler : MonoBehaviour
             var text = ReturnCurrentSaveValue;
             var value = Int32.Parse(text);
             Slider slider = sliderMenu.GetComponent<Slider>();
-            value = (int) Mathf.Clamp(value += move, slider.minValue, slider.maxValue);
+            value = (int)Mathf.Clamp(value += move, slider.minValue, slider.maxValue);
             slider.value = value;
             SetCurrentSaveValue(value.ToString());
         }
@@ -184,13 +188,14 @@ public class MainMenuHandler : MonoBehaviour
 
     private void ChangeMenu()
     {
-        if (currentMenuItems?.Length > 0)
+        if (currentMenuItems?.Length > 0 && menuState != MenuState.newgame)
         {
             for (int i = 0; i < currentMenuItems.Length; i++)
             {
                 Destroy(currentMenuItems[i].gameObject);
             }
         }
+        if (!pointers.gameObject.activeSelf) pointers.gameObject.SetActive(true);
         switch (menuState)
         {
             case MenuState.newgame:
@@ -200,7 +205,10 @@ public class MainMenuHandler : MonoBehaviour
                 currentMenuItems = null;
                 highScores.SetActive(true);
                 loading.SetActive(true);
+                pointers.gameObject.SetActive(false);
                 HighScoreManager.GetHighScores();
+                helpBarTexts[1].text = "Back";
+                helpBarTexts[2].text = "Back";
                 break;
             case MenuState.quitgame:
                 Application.Quit();
@@ -222,7 +230,8 @@ public class MainMenuHandler : MonoBehaviour
     {
         currentMenu = (string[])GetType().GetField(menuState.ToString(), BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
         currentMenuTypes = (MenuItemType[])GetType().GetField(menuState.ToString() + "Types", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
-
+        int extraSpacing = currentMenuTypes[0] == MenuItemType.normal ? 4 - currentMenu.Length : 0;
+        spacing = defaultSpacing + (extraSpacing * 80);
         menuEnd = currentMenu.Length - 1;
         currentMenuItems = new MainMenuItem[currentMenu.Length];
         for (int i = 0; i < currentMenu.Length; i++)
@@ -234,12 +243,16 @@ public class MainMenuHandler : MonoBehaviour
             item.text.text = currentMenu[i];
             currentMenuItems[i] = item;
         }
+
         currentSelected = 0;
         SetSelected(true);
     }
 
     private void SetSelected(bool init = false)
     {
+        if (menuState == MenuState.highscores) return;
+        if (movePointers != null) StopCoroutine(movePointers);
+        movePointers = StartCoroutine(MovePointers(new Vector3(pointers.localPosition.x, menuPosition.y - currentSelected * spacing, 0f)));
         for (int i = 0; i < currentMenu.Length; i++)
         {
             currentMenuItems[i].anim.SetBool(currentMenuItems[i].selected, i == currentSelected);
@@ -294,6 +307,14 @@ public class MainMenuHandler : MonoBehaviour
             if (obj[i] != ' ') newString += obj[i].ToString();
         }
         return newString;
+    }
+    private IEnumerator MovePointers(Vector3 target)
+    {
+        while (pointers.transform.localPosition != target)
+        {
+            pointers.transform.localPosition = Vector3.Lerp(pointers.transform.localPosition, target, pointerSpeed * Time.deltaTime);
+            yield return null;
+        }
     }
 }
 enum MenuState

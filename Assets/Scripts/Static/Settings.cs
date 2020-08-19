@@ -17,7 +17,7 @@ public static class Settings
 
     public static string lightingCurrent = PlayerPrefs.GetString("lighting", "High quality");
     public static string lightingSave = lightingCurrent;
-    public static string[] lightings = new string[] { "Low quality", "Medium quality", "High quality"};
+    public static string[] lightings = new string[] { "Low quality", "Medium quality", "High quality" };
 
     public static string mastervolumeCurrent = PlayerPrefs.GetString("mastervolume", "5");
     public static string mastervolumeSave = mastervolumeCurrent;
@@ -66,10 +66,10 @@ public static class Settings
 
     public static Vector2Int ResolutionToVector(string res)
     {
-            var a = res.IndexOf("x");
-            var width = System.Int32.Parse(res.Substring(0, a));
-            var height = System.Int32.Parse(res.Substring(a + 1, res.Length - a - 1));
-            return new Vector2Int(width, height);
+        var a = res.IndexOf("x");
+        var width = System.Int32.Parse(res.Substring(0, a));
+        var height = System.Int32.Parse(res.Substring(a + 1, res.Length - a - 1));
+        return new Vector2Int(width, height);
     }
 
     public static void RestoreValues()
@@ -86,10 +86,11 @@ public static class Settings
         {
             screenmodeCurrent = screenmodeSave;
             FullScreenMode mode = StringToScreenMode(screenmodeCurrent);
-            Debug.Log("Saving resolution at " + resolutionSave);
             SetResolution(ResolutionToVector(resolutionSave), mode);
             resolutionCurrent = resolutionSave;
         }
+        lightingCurrent = lightingSave;
+        PlayerPrefs.SetString("lighting", lightingCurrent);
         for (int i = 0; i < saves.Length; i++)
         {
             if (saves[i].Name.Contains("volume"))
