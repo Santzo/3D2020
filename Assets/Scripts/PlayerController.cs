@@ -6,25 +6,29 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    Animator animator;
     Vector3 movement, collisionPosition;
     bool jump, inAir;
-    Transform nose;
     TextMeshProUGUI debug;
     Camera cam;
-    float moveSpeed = 280f;
-    float rotationSpeed = 0.25f, keyboardRotationSpeed = 0.45f;
+    [SerializeField] float moveSpeed = 280f, rotationSpeed = 0.25f, keyboardRotationSpeed = 0.45f;
     float jumpForce = 17.5f;
     int jumpFrames = 0, maxJumpFrames = 15;
     Rigidbody rb;
     bool controller;
-
+    private int _walkAnimation, _idleAnimation, _attackAnimation, _movementMultiplier, _movementSpeed;
+    private int _attackSpeedMultiplier;
+    private bool attacking;
+    private AnimatorClipInfo[] info;
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        nose = transform.Find("Nose");
+        animator = GetComponentInChildren<Animator>();
+        HashAnimations();
     }
     private void Start()
     {
+        info = animator.GetCurrentAnimatorClipInfo(1);
         cam = Camera.main;
         controller = JoystickHandler.DetectControllerType();
         InputSystem.onDeviceChange += (a, b) => controller = JoystickHandler.DetectControllerType();
@@ -44,41 +48,45 @@ public class PlayerController : MonoBehaviour
                 rb.AddForce(_jumpForce, ForceMode.Impulse);
             }
         }
+        var magnitude = movement.magnitude;
+        if (movement.x != 0 || movement.y != 0)
+        {
+            animator.SetFloat(_movementSpeed, magnitude);
+            animator.SetFloat(_movementMultiplier, magnitude * 2.5f);
+            float rotY = ReturnRotation(movement) + 90f;
+            Quaternion rot = Quaternion.Euler(0f, rotY + cam.transform.eulerAngles.y, 0f);
+            Quaternion destRot = Quaternion.Lerp(transform.rotation, rot, controller ? rotationSpeed : keyboardRotationSpeed);
+            rb.MoveRotation(destRot);
+        }
+        float _moveSpeed = Mathf.Min(magnitude, 1f) * moveSpeed * Time.fixedDeltaTime;
+        Vector3 move = transform.forward * _moveSpeed;
+        rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
 
-        //if (!controller) // Liikkuminen, jos pelaaja pelaa näppäimistöllä
-        //{
-        //    Vector3 move = transform.right * movement.y * moveSpeed * Time.fixedDeltaTime;
-        //    rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
-
-        //    if (movement.x != 0)
-        //    {
-        //        Vector3 a = rb.rotation.eulerAngles;
-        //        float rotSpeed = movement.x * rotationSpeed * Time.fixedDeltaTime;
-        //        Quaternion rot = Quaternion.Euler(a.x, a.y + rotSpeed, a.z);
-        //        rb.MoveRotation(rot);
-        //    }
-        //}
-
-        //else // Liikkuminen, jos pelaaja pelaa ohjaimella
-        //{
-            if (movement.x != 0 || movement.y != 0)
-            {
-                float rotY = ReturnRotation(movement);
-                Quaternion rot = Quaternion.Euler(0f, rotY + cam.transform.eulerAngles.y, 0f);
-                Quaternion destRot = Quaternion.Lerp(transform.rotation, rot, controller ? rotationSpeed : keyboardRotationSpeed);
-                rb.MoveRotation(destRot);
-            }
-            float _moveSpeed = Mathf.Min(movement.magnitude, 1f) * moveSpeed * Time.fixedDeltaTime;
-            Vector3 move = transform.right * _moveSpeed;
-            rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
-        //}
     }
     private void Update()
     {
         debug.text = jumpFrames.ToString();
         movement = controller ? JoystickHandler.Movement : JoystickHandler.KeyboardMovement;
+        animator.SetBool(_walkAnimation, movement != Vector3.zero);
         if (controller) JoystickHandler.AnyButton();
-        if (JoystickHandler.Attack) Debug.Log("Attack");
+        if (attacking)
+        {
+            var stateinfo = animator.GetCurrentAnimatorStateInfo(1);
+            if (!animator.IsInTransition(1) && stateinfo.IsName("Attack") && stateinfo.normalizedTime >= 1f)
+            {
+                animator.SetLayerWeight(1, 0f);
+                attacking = false;
+            }
+        }
+        if (!attacking && JoystickHandler.Attack)
+        {
+            animator.SetLayerWeight(1, 1f);
+            animator.SetTrigger(_attackAnimation);
+            attacking = true;
+        }
+
+
+
         if (JoystickHandler.Jump == 0)
         {
             jumpFrames = 0;
@@ -103,17 +111,23 @@ public class PlayerController : MonoBehaviour
         }
 
     }
-    float ReturnRotation(Vector2 rot)
-    {
-        float angle = Mathf.Atan2(-rot.y, rot.x) * Mathf.Rad2Deg;
-        return angle;
-    }
+
+    float ReturnRotation(Vector2 rot) => Mathf.Atan2(-rot.y, rot.x) * Mathf.Rad2Deg;
 
     private void OnCollisionEnter(Collision collision)
     {
         bool onTop = transform.position.y >= collision.transform.position.y;
         inAir = !onTop;
     }
-
+    private void HashAnimations()
+    {
+        _attackAnimation = Animator.StringToHash("Attack");
+        _idleAnimation = Animator.StringToHash("Idle");
+        _walkAnimation = Animator.StringToHash("Walk");
+        _movementMultiplier = Animator.StringToHash("MovementMultiplier");
+        _movementSpeed = Animator.StringToHash("MovementSpeed");
+        _attackSpeedMultiplier = Animator.StringToHash("AttackSpeed");
+        animator.SetFloat(_attackSpeedMultiplier, 8.25f);
+    }
 }
 

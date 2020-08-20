@@ -1,62 +1,24 @@
 fileFormatVersion: 2
-guid: d4c80abedd37fbe43a15d7224a7861d7
+guid: 4308d1e406dd3e54093c47ae308329fc
 ModelImporter:
   serializedVersion: 19300
   internalIDToNameTable:
   - first:
-      74: 4781951162920444690
-    second: Armature|ArmatureAction
-  - first:
-      74: -1422011007694221501
-    second: Armature|ArmatureAction.001
-  - first:
-      74: 2383903383086459997
-    second: Armature|bpy.ops.wm.call_menu(name="TIME_MT_marker")
-  - first:
       74: -8945691123924629249
-    second: Armature|Idle
+    second: Player|Idle
   - first:
       74: 8349542763059015795
-    second: Armature|Walk
-  - first:
-      74: -7681921176560300353
-    second: EnemyKnight|ArmatureAction.001
-  - first:
-      74: 5495911083819387229
-    second: EnemyKnight|EnemyKnightAction
-  - first:
-      74: 5089043207527727645
-    second: Idle
-  - first:
-      74: -7965179780788406159
-    second: EnemyKnight|Walk
-  - first:
-      74: 6232109481970510020
     second: Walk
   - first:
-      74: 6232109481970510020
-    second: EnemyKnight|Walk
+      74: -1950934060857412392
+    second: Player|Walk
   - first:
-      74: 5089043207527727645
-    second: EnemyKnight|Idle
+      74: -8143441008401525273
+    second: Player|Run
   - first:
-      74: 4358344838142641523
-    second: EnemyKnight|Idle (1)
-  - first:
-      74: 6232109481970510020
-    second: EnemyKnight|Walk (1)
-  - first:
-      74: 6382549017605308109
-    second: EnemyKnight|EnemyKnight|EnemyKnight|Walk|EnemyKnight|Walk
-  - first:
-      74: 4793029935096827440
-    second: EnemyKnight|EnemyKnight|EnemyKnight|Idle|EnemyKnight|Idle
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: kakkakikka
-    second: {fileID: 2100000, guid: 31b1cb6ffa24cc8488993749537cfe7f, type: 2}
+      74: 777722695357065320
+    second: Player|Attack
+  externalObjects: {}
   materials:
     materialImportMode: 1
     materialName: 0
@@ -85,11 +47,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: EnemyKnight|Walk
-      takeName: EnemyKnight|Walk
+      name: Player|Idle
+      takeName: Player|Idle
       internalID: 0
       firstFrame: 0
-      lastFrame: 69
+      lastFrame: 59
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -114,11 +76,11 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: EnemyKnight|Idle
-      takeName: EnemyKnight|Idle
+      name: Player|Walk
+      takeName: Player|Walk
       internalID: 0
       firstFrame: 0
-      lastFrame: 70
+      lastFrame: 64
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -126,6 +88,64 @@ ModelImporter:
       loop: 0
       hasAdditiveReferencePose: 0
       loopTime: 1
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    - serializedVersion: 16
+      name: Player|Run
+      takeName: Player|Run
+      internalID: 0
+      firstFrame: 0
+      lastFrame: 64
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 1
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    - serializedVersion: 16
+      name: Player|Attack
+      takeName: Player|Attack
+      internalID: 0
+      firstFrame: 0
+      lastFrame: 60
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
       loopBlend: 0
       loopBlendOrientation: 0
       loopBlendPositionY: 0

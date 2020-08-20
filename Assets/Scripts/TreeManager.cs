@@ -12,8 +12,6 @@ public class TreeManager : MonoBehaviour
             if (trans.name.StartsWith("Pine"))
             {
                 var mat = trans.GetChild(0).GetComponent<MeshRenderer>().material;
-                Debug.Log(mat.GetFloat("Power"));
-
                 mat.SetFloat("Power", Random.Range(-0.15f, 0.15f));
             }
         }
