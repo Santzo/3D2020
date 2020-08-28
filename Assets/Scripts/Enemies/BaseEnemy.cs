@@ -14,13 +14,14 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField]
     protected float idleDelay = 1.5f;
     protected float currentIdleDelay = 0f;
-    [SerializeField] protected float health;
+    [SerializeField] protected float health = 3, moveSpeed = 4.5f;
 
     private void Awake()
     {
         animator = GetComponentInChildren<Animator>();
         HashAnimations();
         agent = GetComponent<NavMeshAgent>();
+        agent.speed = moveSpeed;
         var points = transform.Find("PatrolPoints");
         if (points != null)
         {
@@ -86,7 +87,7 @@ public abstract class BaseEnemy : MonoBehaviour
         _idleAnimation = Animator.StringToHash("Idle");
         _walkAnimation = Animator.StringToHash("Walk");
         _walkMultiplier = Animator.StringToHash("WalkMultiplier");
-        animator.SetFloat(_walkMultiplier, 2f);
+        animator.SetFloat(_walkMultiplier, moveSpeed * 0.5f);
     }
 
     public virtual void TakeDamage(float damage)

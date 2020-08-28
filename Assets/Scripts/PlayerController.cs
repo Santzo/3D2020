@@ -20,6 +20,22 @@ public class PlayerController : MonoBehaviour
     private int _attackSpeedMultiplier;
     private bool attacking;
     private AnimatorClipInfo[] info;
+    private int _health;
+    private int maxHealth = 8;
+    public int Health
+    {
+        get
+        {
+            return _health;
+        }
+        set
+        {
+            if (value == _health) return;
+            if (value > maxHealth) value = maxHealth;
+            Events.onPlayerHealthChange(_health, value, maxHealth);
+            _health = value;
+        }
+    }
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -28,12 +44,14 @@ public class PlayerController : MonoBehaviour
     }
     private void Start()
     {
+        Health = maxHealth / 2;
         info = animator.GetCurrentAnimatorClipInfo(1);
         cam = Camera.main;
         controller = JoystickHandler.DetectControllerType();
         InputSystem.onDeviceChange += (a, b) => controller = JoystickHandler.DetectControllerType();
         debug = GameObject.Find("Debug").GetComponent<TextMeshProUGUI>();
     }
+
 
     private void FixedUpdate()
     {
@@ -48,17 +66,17 @@ public class PlayerController : MonoBehaviour
                 rb.AddForce(_jumpForce, ForceMode.Impulse);
             }
         }
-        var magnitude = movement.magnitude;
+        var magnitude = Mathf.Min(movement.magnitude, 1f);
         if (movement.x != 0 || movement.y != 0)
         {
             animator.SetFloat(_movementSpeed, magnitude);
-            animator.SetFloat(_movementMultiplier, magnitude * 2.5f);
+            animator.SetFloat(_movementMultiplier, magnitude * 3f);
             float rotY = ReturnRotation(movement) + 90f;
             Quaternion rot = Quaternion.Euler(0f, rotY + cam.transform.eulerAngles.y, 0f);
             Quaternion destRot = Quaternion.Lerp(transform.rotation, rot, controller ? rotationSpeed : keyboardRotationSpeed);
             rb.MoveRotation(destRot);
         }
-        float _moveSpeed = Mathf.Min(magnitude, 1f) * moveSpeed * Time.fixedDeltaTime;
+        float _moveSpeed = magnitude * moveSpeed * Time.fixedDeltaTime;
         Vector3 move = transform.forward * _moveSpeed;
         rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
 
@@ -128,6 +146,14 @@ public class PlayerController : MonoBehaviour
         _movementSpeed = Animator.StringToHash("MovementSpeed");
         _attackSpeedMultiplier = Animator.StringToHash("AttackSpeed");
         animator.SetFloat(_attackSpeedMultiplier, 8.25f);
+    }
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Meat"))
+        {
+            Health++;
+            other.GetComponent<Meat>().PickUp();
+        }
     }
 }
 

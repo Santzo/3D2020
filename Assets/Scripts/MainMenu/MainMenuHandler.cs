@@ -9,6 +9,7 @@ using UnityEngine.UI;
 
 public class MainMenuHandler : MonoBehaviour
 {
+    private bool isIntroScreen = true;
     MenuState _menuState;
     public GameObject menuItem, scoreEntry, leftRight, slider;
     private GameObject leftRightMenu, sliderMenu;
@@ -23,7 +24,7 @@ public class MainMenuHandler : MonoBehaviour
     private string[] main = new string[] { "New Game", "High Scores", "Settings", "Quit Game" };
     private MenuItemType[] mainTypes = new MenuItemType[] { MenuItemType.normal, MenuItemType.normal, MenuItemType.normal, MenuItemType.normal };
 
-    private string[] settings = new string[] { "Graphics", "Audio", "Controls" };
+    private string[] settings = new string[] { "Graphics", "Audio" };
     private MenuItemType[] settingsTypes = new MenuItemType[] { MenuItemType.normal, MenuItemType.normal, MenuItemType.normal };
 
     private string[] graphics = new string[] { "Resolution", "Screen Mode", "Lighting" };
@@ -39,6 +40,7 @@ public class MainMenuHandler : MonoBehaviour
     private MainMenuItem[] currentMenuItems;
     Vector2Int menuPosition = new Vector2Int(0, 270);
     int defaultSpacing = 180, spacing = 180, menuEnd, currentSelected, highScoreSpacing = 60;
+    public int pointerOffsetY = -5;
     MenuState menuState
     {
         get
@@ -54,12 +56,19 @@ public class MainMenuHandler : MonoBehaviour
 
     private void Awake()
     {
-        highScores = transform.Find("HighScores").gameObject;
+        var res = Settings.ResolutionToVector(Settings.resolutionCurrent);
+        if (Settings.StringToScreenMode(Settings.screenmodeCurrent) != Screen.fullScreenMode)
+        {
+            Settings.SetResolution(res, Settings.StringToScreenMode(Settings.screenmodeCurrent));
+        }
+        var container = transform.Find("MainMenuContainer");
+        var intro = transform.Find("Intro");
+        highScores = container.Find("HighScores").gameObject;
         loading = highScores.transform.Find("Loading").gameObject;
         content = highScores.transform.Find("Table").Find("Content").gameObject;
-        helpBarImages = transform.Find("HelpBar").GetComponentsInChildren<Image>();
-        helpBarTexts = transform.Find("HelpBar").GetComponentsInChildren<TextMeshProUGUI>();
-        pointers = transform.Find("Pointers");
+        helpBarImages = container.Find("HelpBar").GetComponentsInChildren<Image>();
+        helpBarTexts = container.Find("HelpBar").GetComponentsInChildren<TextMeshProUGUI>();
+        pointers = container.Find("Pointers");
         highScores.SetActive(false);
         JoystickHandler.DetectControllerType();
         GetHelpBarButtonImages();
@@ -70,7 +79,7 @@ public class MainMenuHandler : MonoBehaviour
         sliderMenu.transform.SetParent(transform);
         sliderMenu.SetActive(false);
         leftRightText = leftRightMenu.GetComponentInChildren<TextMeshProUGUI>();
-        menuState = MenuState.main;
+        intro.gameObject.SetActive(true);
     }
 
     private void GetHelpBarButtonImages()
@@ -81,8 +90,7 @@ public class MainMenuHandler : MonoBehaviour
     }
     private void Start()
     {
-        var res = Settings.ResolutionToVector(Settings.resolutionCurrent);
-        Settings.SetResolution(res, Settings.StringToScreenMode(Settings.screenmodeCurrent));
+
         HighScoreManager.instance.OnScoresLoaded += ScoresLoaded;
     }
 
@@ -108,18 +116,31 @@ public class MainMenuHandler : MonoBehaviour
 
     private void Update()
     {
-        if (JoystickHandler.MenuMovementVertical != 0) MoveSelector(JoystickHandler.MenuMovementVertical);
-        if (JoystickHandler.MenuMovementHorizontal != 0 && currentMenuTypes[currentSelected] != MenuItemType.normal)
+        if (isIntroScreen)
         {
-            SetMenuValue(JoystickHandler.MenuMovementHorizontal);
+            if (Input.anyKeyDown)
+            {
+                isIntroScreen = false;
+                transform.GetChild(2).gameObject.SetActive(false);
+                transform.GetChild(1).gameObject.SetActive(true);
+                menuState = MenuState.main;
+            }
         }
-        if (JoystickHandler.Interact)
+        else
         {
-            InteractButton();
-        }
-        if (JoystickHandler.Cancel)
-        {
-            BackButton();
+            if (JoystickHandler.MenuMovementVertical != 0) MoveSelector(JoystickHandler.MenuMovementVertical);
+            if (JoystickHandler.MenuMovementHorizontal != 0 && currentMenuTypes[currentSelected] != MenuItemType.normal)
+            {
+                SetMenuValue(JoystickHandler.MenuMovementHorizontal);
+            }
+            if (JoystickHandler.Interact)
+            {
+                InteractButton();
+            }
+            if (JoystickHandler.Cancel)
+            {
+                BackButton();
+            }
         }
     }
     private void BackButton()
@@ -237,7 +258,7 @@ public class MainMenuHandler : MonoBehaviour
         for (int i = 0; i < currentMenu.Length; i++)
         {
             var obj = Instantiate(menuItem);
-            obj.transform.SetParent(transform);
+            obj.transform.SetParent(transform.GetChild(1));
             obj.transform.localPosition = new Vector2(menuPosition.x, menuPosition.y - i * spacing);
             MainMenuItem item = obj.GetComponent<MainMenuItem>();
             item.text.text = currentMenu[i];
@@ -252,7 +273,7 @@ public class MainMenuHandler : MonoBehaviour
     {
         if (menuState == MenuState.highscores) return;
         if (movePointers != null) StopCoroutine(movePointers);
-        movePointers = StartCoroutine(MovePointers(new Vector3(pointers.localPosition.x, menuPosition.y - currentSelected * spacing, 0f)));
+        movePointers = StartCoroutine(MovePointers(new Vector3(pointers.localPosition.x, menuPosition.y - currentSelected * spacing + pointerOffsetY, 0f)));
         for (int i = 0; i < currentMenu.Length; i++)
         {
             currentMenuItems[i].anim.SetBool(currentMenuItems[i].selected, i == currentSelected);

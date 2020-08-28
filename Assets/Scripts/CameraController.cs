@@ -17,7 +17,7 @@ public class CameraController : MonoBehaviour
     private void LateUpdate()
     {
         Vector3 direction = -(middlePoint.position - player.position);
-        Vector3 point = middlePoint.position + direction * distance + (Vector3.up * height);
+        Vector3 point = middlePoint.position + direction * distance + Vector3.up * height;
         point = new Vector3(Mathf.Clamp(point.x, -100f, 100f), Mathf.Clamp(point.y, -100f, 100f), Mathf.Clamp(point.z, -100f, 100f));
         transform.position = Vector3.SmoothDamp(transform.position, point, ref vel, 0.15f);
         transform.LookAt(player, Vector2.up);
