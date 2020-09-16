@@ -34,7 +34,6 @@ public class UIHandler : MonoBehaviour
 
     void UpdateHearts(int oldHealth, int newHealth, int maxHealth)
     {
-        Debug.Log(oldHealth + ", " + newHealth);
         if (meatPrefabs == null)
         {
             meatPrefabs = new MeatPrefab[maxHealth].Populate();

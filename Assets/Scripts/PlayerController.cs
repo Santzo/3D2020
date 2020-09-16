@@ -8,11 +8,10 @@ public class PlayerController : MonoBehaviour
 {
     Animator animator;
     Vector3 movement, collisionPosition;
-    bool jump, inAir, onMovingPlatform;
+    bool jump, inAir, onMovingPlatform, isGrounded;
     Vector3 localOffset, shadowOri;
     MovingPlatformBehaviour movingPlatform;
     Transform movingPlatformTransform, shadowTransform;
-    TextMeshProUGUI debug;
     Camera cam;
     [SerializeField] float moveSpeed = 280f, rotationSpeed = 0.25f, keyboardRotationSpeed = 0.45f, jumpForce = 17.5f;
     int jumpFrames = 0, maxJumpFrames = 15;
@@ -54,7 +53,6 @@ public class PlayerController : MonoBehaviour
         cam = Camera.main;
         controller = JoystickHandler.DetectControllerType();
         InputSystem.onDeviceChange += (a, b) => controller = JoystickHandler.DetectControllerType();
-        debug = GameObject.Find("Debug").GetComponent<TextMeshProUGUI>();
     }
 
 
@@ -94,7 +92,7 @@ public class PlayerController : MonoBehaviour
     {
         movement = controller ? JoystickHandler.Movement : JoystickHandler.KeyboardMovement;
         animator.SetBool(_walkAnimation, movement != Vector3.zero);
-        if (controller) JoystickHandler.AnyButton();
+        // if (controller) JoystickHandler.AnyButton();
         if (attacking)
         {
             var stateinfo = animator.GetCurrentAnimatorStateInfo(1);
@@ -111,36 +109,46 @@ public class PlayerController : MonoBehaviour
             attacking = true;
         }
 
-        if (JoystickHandler.Jump == 0)
+        if (controller && JoystickHandler.Jump == 0 || !controller && Input.GetKeyUp(KeyCode.Space))
         {
             jumpFrames = 0;
             jump = false;
         }
+
         if (inAir && jumpFrames == 0 || jumpFrames > maxJumpFrames)
         {
             jump = false;
         }
 
-        if (!jump)
+        switch (jump)
         {
-            if (!controller) // Hyppykoodi, jos pelaaja pelaa näppäimistöllä
+            case true:
+                HandleJump();
+                break;
+            case false:
+                if (inAir) break;
+                HandleJump();
+                break;
+        }
+
+        UpdateShadowPosition();
+    }
+    void HandleJump()
+    {
+        if (!controller) // Hyppykoodi, jos pelaaja pelaa näppäimistöllä
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
             {
-                if (Input.GetKeyDown(KeyCode.Space))
-                {
-                    jump = true;
-                    rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
-                }
-            }
-            else // Hyppykoodi, jos pelaaja pelaa ohjaimella
-            {
-                if (JoystickHandler.Jump > 0)
-                {
-                    jump = true;
-                    rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
-                }
+                jump = true;
             }
         }
-        UpdateShadowPosition();
+        else // Hyppykoodi, jos pelaaja pelaa ohjaimella
+        {
+            if (JoystickHandler.Jump > 0)
+            {
+                jump = true;
+            }
+        }
     }
     void UpdateShadowPosition()
     {

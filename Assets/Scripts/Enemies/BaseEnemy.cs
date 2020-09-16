@@ -30,7 +30,6 @@ public abstract class BaseEnemy : MonoBehaviour
             {
                 patrolPoints[i] = points.GetChild(i).position;
             }
-            Debug.Log(patrolPoints.Length);
         }
         transform.position = patrolPoints[patrolPoints.Length - 1];
         transform.forward = patrolPoints[0] - transform.position;
