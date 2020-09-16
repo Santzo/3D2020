@@ -18,7 +18,7 @@ public class CameraController : MonoBehaviour
     {
         Vector3 direction = -(middlePoint.position - player.position);
         Vector3 point = (middlePoint.position + direction * distance);
-        point = new Vector3(Mathf.Clamp(point.x, -100f, 100f), player.position.y + height, Mathf.Clamp(point.z, -100f, 100f));
+        point = new Vector3(Mathf.Clamp(point.x, -125f, 125f), player.position.y + height, Mathf.Clamp(point.z, -125f, 125f));
         transform.position = Vector3.SmoothDamp(transform.position, point, ref vel, 0.15f);
         transform.LookAt(player, Vector2.up);
     }

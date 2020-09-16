@@ -8,16 +8,19 @@ public class PlayerController : MonoBehaviour
 {
     Animator animator;
     Vector3 movement, collisionPosition;
-    bool jump, inAir;
+    bool jump, inAir, onMovingPlatform;
+    Vector3 localOffset, shadowOri;
+    MovingPlatformBehaviour movingPlatform;
+    Transform movingPlatformTransform, shadowTransform;
     TextMeshProUGUI debug;
     Camera cam;
-    [SerializeField] float moveSpeed = 280f, rotationSpeed = 0.25f, keyboardRotationSpeed = 0.45f;
-    float jumpForce = 17.5f;
+    [SerializeField] float moveSpeed = 280f, rotationSpeed = 0.25f, keyboardRotationSpeed = 0.45f, jumpForce = 17.5f;
     int jumpFrames = 0, maxJumpFrames = 15;
     Rigidbody rb;
     bool controller;
     private int _walkAnimation, _idleAnimation, _attackAnimation, _movementMultiplier, _movementSpeed;
     private int _attackSpeedMultiplier;
+    private float movMultiplier;
     private bool attacking;
     private AnimatorClipInfo[] info;
     private int _health;
@@ -41,6 +44,8 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         animator = GetComponentInChildren<Animator>();
         HashAnimations();
+        shadowTransform = transform.Find("Shadow");
+        shadowOri = shadowTransform.localPosition;
     }
     private void Start()
     {
@@ -70,7 +75,7 @@ public class PlayerController : MonoBehaviour
         if (movement.x != 0 || movement.y != 0)
         {
             animator.SetFloat(_movementSpeed, magnitude);
-            animator.SetFloat(_movementMultiplier, magnitude * 3f);
+            animator.SetFloat(_movementMultiplier, movMultiplier * magnitude * 3f);
             float rotY = ReturnRotation(movement) + 90f;
             Quaternion rot = Quaternion.Euler(0f, rotY + cam.transform.eulerAngles.y, 0f);
             Quaternion destRot = Quaternion.Lerp(transform.rotation, rot, controller ? rotationSpeed : keyboardRotationSpeed);
@@ -78,12 +83,15 @@ public class PlayerController : MonoBehaviour
         }
         float _moveSpeed = magnitude * moveSpeed * Time.fixedDeltaTime;
         Vector3 move = transform.forward * _moveSpeed;
+        if (onMovingPlatform)
+        {
+            move += movingPlatform.goingRight ? movingPlatform.transform.right * movingPlatform.moveSpeedX : -movingPlatform.transform.right * movingPlatform.moveSpeedX;
+        }
         rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
-
     }
+
     private void Update()
     {
-        debug.text = jumpFrames.ToString();
         movement = controller ? JoystickHandler.Movement : JoystickHandler.KeyboardMovement;
         animator.SetBool(_walkAnimation, movement != Vector3.zero);
         if (controller) JoystickHandler.AnyButton();
@@ -103,8 +111,6 @@ public class PlayerController : MonoBehaviour
             attacking = true;
         }
 
-
-
         if (JoystickHandler.Jump == 0)
         {
             jumpFrames = 0;
@@ -113,29 +119,74 @@ public class PlayerController : MonoBehaviour
         if (inAir && jumpFrames == 0 || jumpFrames > maxJumpFrames)
         {
             jump = false;
-            return;
-        }
-        if (!controller) // Hyppykoodi, jos pelaaja pelaa näppäimistöllä
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-                jump = true;
-        }
-        else // Hyppykoodi, jos pelaaja pelaa ohjaimella
-        {
-            if (JoystickHandler.Jump > 0)
-            {
-                jump = true;
-            }
         }
 
+        if (!jump)
+        {
+            if (!controller) // Hyppykoodi, jos pelaaja pelaa näppäimistöllä
+            {
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    jump = true;
+                    rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+                }
+            }
+            else // Hyppykoodi, jos pelaaja pelaa ohjaimella
+            {
+                if (JoystickHandler.Jump > 0)
+                {
+                    jump = true;
+                    rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+                }
+            }
+        }
+        UpdateShadowPosition();
+    }
+    void UpdateShadowPosition()
+    {
+        RaycastHit rayHit;
+        var a = Physics.Raycast(transform.position, Vector3.down, out rayHit, 8.5f);
+        if (a)
+        {
+            shadowTransform.position = new Vector3(transform.position.x, rayHit.point.y + 0.15f, transform.position.z);
+        }
+        else
+        {
+            shadowTransform.position = Vector3.zero;
+        }
     }
 
     float ReturnRotation(Vector2 rot) => Mathf.Atan2(-rot.y, rot.x) * Mathf.Rad2Deg;
 
     private void OnCollisionEnter(Collision collision)
     {
-        bool onTop = transform.position.y >= collision.transform.position.y;
+        var colPoint = collision.GetContact(0);
+        bool onTop = transform.position.y >= colPoint.point.y;
         inAir = !onTop;
+        if (collision.collider.CompareTag("MovingPlatform") && onTop)
+        {
+            movingPlatform = collision.transform.GetComponent<MovingPlatformBehaviour>();
+            movingPlatformTransform = movingPlatform.transform;
+            onMovingPlatform = true;
+        }
+        if (collision.collider.CompareTag("DamageTrigger"))
+        {
+            Health--;
+        }
+    }
+    private void OnCollisionStay(Collision collision)
+    {
+        if (!inAir || jump) return;
+        var colPoint = collision.GetContact(0);
+        bool onTop = transform.position.y >= colPoint.point.y;
+        inAir = !onTop;
+    }
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.collider.CompareTag("MovingPlatform"))
+        {
+            onMovingPlatform = false;
+        }
     }
     private void HashAnimations()
     {
@@ -145,6 +196,7 @@ public class PlayerController : MonoBehaviour
         _movementMultiplier = Animator.StringToHash("MovementMultiplier");
         _movementSpeed = Animator.StringToHash("MovementSpeed");
         _attackSpeedMultiplier = Animator.StringToHash("AttackSpeed");
+        movMultiplier = animator.GetFloat(_movementMultiplier);
         animator.SetFloat(_attackSpeedMultiplier, 8.25f);
     }
     private void OnTriggerEnter(Collider other)
@@ -154,6 +206,21 @@ public class PlayerController : MonoBehaviour
             Health++;
             other.GetComponent<Meat>().PickUp();
         }
+        if (other.CompareTag("Speed"))
+        {
+            moveSpeed += 55;
+            other.GetComponent<Meat>().PickUp();
+            movMultiplier += .1f;
+            Events.onInfoAction("Speed Increased!");
+        }
+        if (other.CompareTag("Jump"))
+        {
+            jumpForce += 2.75f;
+            other.GetComponent<Meat>().PickUp();
+            Events.onInfoAction("Jump Power Increased!");
+        }
+
     }
 }
+
 

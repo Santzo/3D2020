@@ -1,11 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UIHandler : MonoBehaviour
 {
     public GameObject heartPrefab;
+    private GameObject infoText;
     private Vector2 heartStartPoint;
     private float heartOffset;
     private MeatPrefab[] meatPrefabs;
@@ -17,6 +20,16 @@ public class UIHandler : MonoBehaviour
         heartStartPoint = new Vector2(Screen.width * 0.03f, Screen.height - (Screen.height * 0.04f));
         heartOffset = 95f;
         Events.onPlayerHealthChange += UpdateHearts;
+        Events.onInfoAction += ShowInfoText;
+        infoText = transform.Find("Info").gameObject;
+        infoText.SetActive(false);
+    }
+
+    private void ShowInfoText(string text)
+    {
+        if (!infoText.activeSelf) infoText.SetActive(true);
+        infoText.GetComponent<Animator>().Rebind();
+        infoText.GetComponent<TextMeshProUGUI>().text = text;
     }
 
     void UpdateHearts(int oldHealth, int newHealth, int maxHealth)

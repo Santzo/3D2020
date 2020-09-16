@@ -14,12 +14,12 @@ public class TreeManager : MonoBehaviour
                 var mat = trans.GetChild(0).GetComponent<MeshRenderer>().material;
                 mat.SetFloat("Power", Random.Range(-0.05f, 0.05f));
             }
+            if (trans.name.StartsWith("Shrub"))
+            {
+                var mat = trans.GetComponent<MeshRenderer>().material;
+                mat.SetFloat("Power", Random.Range(-0.5f, 0.5f));
+            }
         }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
 }

@@ -5,6 +5,10 @@ TagManager:
   serializedVersion: 2
   tags:
   - Meat
+  - Speed
+  - MovingPlatform
+  - Jump
+  - DamageTrigger
   layers:
   - Default
   - TransparentFX
@@ -16,9 +20,9 @@ TagManager:
   - 
   - Player
   - Ground
-  - Tower
   - TowerBase
-  - 
+  - Tower
+  - Obstacle
   - 
   - 
   - 
